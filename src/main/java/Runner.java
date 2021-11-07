@@ -1,43 +1,33 @@
+import org.example.safe.exceptions.EmptyFileException;
+import org.example.safe.exceptions.IncorrectDataException;
 import org.example.safe.model.Item;
 import org.example.safe.model.Safe;
-import org.example.safe.services.CsvLineToItem;
+import org.example.safe.services.CsvFileReader;
+import org.example.safe.services.SafePrintService;
 import org.example.safe.services.SafeService;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Runner {
     public static void main(String[] args) {
-        List<Item> items = new ArrayList<>();
         Safe safe;
         File file = new File(args[0]);
-        try( BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            if (file.length() == 0) {
-                throw new IOException(file.getAbsolutePath() + " is empty");
-            }
-            int capacity = Integer.parseInt(reader.readLine());
-            safe = new Safe(capacity);
+        CsvFileReader reader = new CsvFileReader();
 
-            while (reader.ready()) {
-                String itemString = reader.readLine();
-                try {
-                    Item item = CsvLineToItem.getItem(itemString);
-                    items.add(item);
-                } catch (IllegalArgumentException e) {
-                    System.out.println(e);
-                }
-            }
+        try {
+            safe = new Safe(reader.getSafeCapacity(file));
+            List<Item> items = reader.getItemList(file);
 
-            List<Item> optimalList = SafeService.fillSafe(safe, items);
-            System.out.println("Max volume items = " + optimalList.stream().mapToInt(Item::getVolume).sum());
-            safe.setItems(optimalList);
-            System.out.println(safe);
-        } catch (IOException | NumberFormatException e) {
+            SafeService safeService = new SafeService();
+            Safe filledSafe = safeService.fillSafe(safe, items);
+            SafePrintService printService = new SafePrintService();
+            printService.printVolumeSafeItems(filledSafe);
+            printService.printSafe(filledSafe);
+            printService.printPriceSafe(filledSafe);
+        } catch (EmptyFileException | IncorrectDataException e) {
             System.out.println(e);
         }
+
     }
 }

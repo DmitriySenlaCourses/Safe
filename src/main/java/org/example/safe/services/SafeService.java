@@ -8,40 +8,62 @@ import java.util.List;
 
 public class SafeService {
 
-    public static List<Item> fillSafe(Safe safe, List<Item> itemList) {
+    public Safe fillSafe(Safe safe, List<Item> itemList) {
         int safeCapacity = safe.getCapacity();
-        int[][] maxPrices = new int[itemList.size() + 1][safeCapacity + 1];
+        Safe[][] maxPricesEachSafeVolumeAndItemSet = new Safe[itemList.size() + 1][safeCapacity + 1];
+
+        setEmptySafeForEmptyListItemAndZeroCapacityStepSafe(maxPricesEachSafeVolumeAndItemSet);
 
         for (int itemNumber = 1; itemNumber <= itemList.size(); itemNumber++) {
-            for (int volume = 1; volume <= safeCapacity; volume++) {
-                int itemVolume = itemList.get(itemNumber -1).getVolume();
-                int itemPrice = itemList.get(itemNumber -1).getPrice();
+            for (int safeVolumeStep = 1; safeVolumeStep <= safeCapacity; safeVolumeStep++) {
+                Item item = itemList.get(itemNumber - 1);
+                int itemVolume = item.getVolume();
+                int itemPrice = item.getPrice();
 
-                if (volume >= itemVolume) {
-                    maxPrices[itemNumber][volume] = Math.max(maxPrices[itemNumber - 1][volume], maxPrices[itemNumber - 1][volume - itemVolume] + itemPrice);
+                if (safeVolumeStep >= itemVolume) {
+                    if (getSafeItemPriceSum(maxPricesEachSafeVolumeAndItemSet[itemNumber - 1][safeVolumeStep]) >
+                            getSafeItemPriceSum(maxPricesEachSafeVolumeAndItemSet[itemNumber - 1][safeVolumeStep - itemVolume]) + itemPrice) {
+
+                        maxPricesEachSafeVolumeAndItemSet[itemNumber][safeVolumeStep] =
+                                maxPricesEachSafeVolumeAndItemSet[itemNumber - 1][safeVolumeStep];
+                    } else {
+                        Safe newSafe = copySafeAndAddItem(maxPricesEachSafeVolumeAndItemSet[itemNumber - 1][safeVolumeStep - itemVolume],
+                                item,
+                                safeVolumeStep);
+
+                        maxPricesEachSafeVolumeAndItemSet[itemNumber][safeVolumeStep] = newSafe;
+                    }
                 } else {
-                    maxPrices[itemNumber][volume] = maxPrices[itemNumber - 1][volume];
+                    maxPricesEachSafeVolumeAndItemSet[itemNumber][safeVolumeStep] =
+                            maxPricesEachSafeVolumeAndItemSet[itemNumber - 1][safeVolumeStep];
                 }
             }
         }
-        return getItems(maxPrices, itemList);
+        int itemNumber = maxPricesEachSafeVolumeAndItemSet.length - 1;
+        int volume = maxPricesEachSafeVolumeAndItemSet[0].length - 1;
+        return maxPricesEachSafeVolumeAndItemSet[itemNumber][volume];
     }
 
-    private static List<Item> getItems(int[][] maxPrices, List<Item> itemList) {
-        List<Item> items = new ArrayList<>();
-        int itemNumber = maxPrices.length -1;
-        int volume = maxPrices[0].length - 1;
-        int maxPrice = maxPrices[itemNumber][volume];
-        while (maxPrice > 0) {
-            if (maxPrice != maxPrices[itemNumber - 1][volume]) {
-                maxPrice = maxPrice - itemList.get(itemNumber - 1).getPrice();
-                items.add(itemList.get(itemNumber - 1));
-                volume = volume - itemList.get(itemNumber - 1).getVolume();
-                --itemNumber;
-            }else {
-                --itemNumber;
-            }
+    private int getSafeItemPriceSum(Safe safe) {
+        return safe.getItems().stream().mapToInt(Item::getPrice).sum();
+    }
+
+    private void setEmptySafeForEmptyListItemAndZeroCapacityStepSafe(Safe[][] maxPricesEachSafeVolumeAndItemSet) {
+        for (int itemNumber = 0; itemNumber < maxPricesEachSafeVolumeAndItemSet.length; itemNumber++) {
+            maxPricesEachSafeVolumeAndItemSet[itemNumber][0] = new Safe(0);
         }
-        return items;
+
+        for (int safeVolumeStep = 0; safeVolumeStep < maxPricesEachSafeVolumeAndItemSet[0].length; safeVolumeStep++) {
+            maxPricesEachSafeVolumeAndItemSet[0][safeVolumeStep] = new Safe(safeVolumeStep);
+        }
+    }
+
+    private Safe copySafeAndAddItem(Safe safe, Item item, int newSafeCapacity) {
+        List<Item> tempItems = safe.getItems();
+        Safe newSafe = new Safe(newSafeCapacity);
+        List<Item> newSafeItems = new ArrayList<>(tempItems);
+        newSafeItems.add(item);
+        newSafe.setItems(newSafeItems);
+        return newSafe;
     }
 }
