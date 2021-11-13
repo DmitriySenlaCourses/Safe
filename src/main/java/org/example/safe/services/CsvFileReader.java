@@ -13,42 +13,54 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class CsvFileReader {
+    private final File sourceFile;
+    private final Pattern intNumberPattern = Pattern.compile("\\d+");
 
-    public int getSafeCapacity(File csvFile) throws EmptyFileException, IncorrectDataException {
-        Pattern intNumberPattern = Pattern.compile("\\d+");
-        int capacity = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
-            if (csvFile.length() == 0) {
-                throw new EmptyFileException(csvFile.getAbsolutePath() + " is empty");
-            }
-            String capacityString = reader.readLine();
-            if (intNumberPattern.matcher(capacityString).matches()) {
-                capacity = Integer.parseInt(capacityString);
-            } else {
-                throw new IncorrectDataException("The line \"" + capacityString + "\" is incorrect");
-            }
+    public CsvFileReader(File sourceFile) {
+        this.sourceFile = sourceFile;
+    }
+
+    public int getSafeCapacity() throws EmptyFileException, IncorrectDataException {
+        return (int) csvReader(this::readCapacity);
+    }
+
+    public List<Item> getItemList() throws EmptyFileException, IncorrectDataException {
+        return (List<Item>) csvReader(this::readItems);
+    }
+
+    private Object csvReader(CustonFunction<BufferedReader, ?> function) throws EmptyFileException, IncorrectDataException {
+        try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
+            return function.apply(reader);
         } catch (IOException e) {
             System.out.println(e);
         }
-        return capacity;
+        return null;
     }
 
-    public List<Item> getItemList(File csvFile) {
+    private int readCapacity(BufferedReader reader) throws EmptyFileException, IOException, IncorrectDataException {
+        if (sourceFile.length() == 0) {
+            throw new EmptyFileException(sourceFile.getAbsolutePath() + " is empty");
+        }
+        String capacityString = reader.readLine();
+        if (intNumberPattern.matcher(capacityString).matches()) {
+            return Integer.parseInt(capacityString);
+        } else {
+            throw new IncorrectDataException("The line \"" + capacityString + "\" is incorrect");
+        }
+    }
+
+    private List<Item> readItems(BufferedReader reader) throws IOException {
         List<Item> items = new ArrayList<>();
-        CsvLineToItem csvLineToItem = new CsvLineToItem();
-        try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
-            reader.readLine();
-            while (reader.ready()) {
-                String itemString = reader.readLine();
-                try {
-                    Item item = csvLineToItem.getItem(itemString);
-                    items.add(item);
-                } catch (IncorrectDataException e) {
-                    System.out.println(e);
-                }
+        CsvLineConverter csvLineConverter = new CsvLineConverter();
+        reader.readLine();
+        while (reader.ready()) {
+            String sourceString = reader.readLine();
+            try {
+                Item item = csvLineConverter.toItem(sourceString);
+                items.add(item);
+            } catch (IncorrectDataException e) {
+                System.out.println(e);
             }
-        } catch (IOException e) {
-            System.out.println(e);
         }
         return items;
     }

@@ -13,11 +13,11 @@ public class Runner {
     public static void main(String[] args) {
         Safe safe;
         File file = new File(args[0]);
-        CsvFileReader reader = new CsvFileReader();
+        CsvFileReader reader = new CsvFileReader(file);
 
         try {
-            safe = new Safe(reader.getSafeCapacity(file));
-            List<Item> items = reader.getItemList(file);
+            safe = new Safe(reader.getSafeCapacity());
+            List<Item> items = reader.getItemList();
 
             SafeService safeService = new SafeService();
             Safe filledSafe = safeService.fillSafe(safe, items);

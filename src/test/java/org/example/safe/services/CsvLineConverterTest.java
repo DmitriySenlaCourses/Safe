@@ -5,17 +5,15 @@ import org.example.safe.model.Item;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
-public class CsvLineToItemTest {
+public class CsvLineConverterTest {
+    private final CsvLineConverter csvLineConverter = new CsvLineConverter();
 
     @Test
     public void getItem() throws IncorrectDataException {
         String csvLine = "item1;3;1";
         Item expectedItem = new Item("item1", 3, 1);
 
-        CsvLineToItem csvLineToItem = new CsvLineToItem();
-        Item actualItem = csvLineToItem.getItem(csvLine);
+        Item actualItem = csvLineConverter.toItem(csvLine);
 
         Assert.assertEquals(expectedItem, actualItem);
     }
@@ -24,8 +22,7 @@ public class CsvLineToItemTest {
     public void getItemIncorrectDataException() throws IncorrectDataException {
         String csvLine = "item1;3;1d";
 
-        CsvLineToItem csvLineToItem = new CsvLineToItem();
-        Item actualItem = csvLineToItem.getItem(csvLine);
+        Item actualItem = csvLineConverter.toItem(csvLine);
 
     }
 }

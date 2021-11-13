@@ -8,8 +8,6 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
-
 public class SafeServiceTest {
 
     @Test
@@ -22,15 +20,11 @@ public class SafeServiceTest {
         itemList.add(new Item("item4",8,7));
         itemList.add(new Item("item5",9,6));
 
-        List<Item> optimalItemList = new ArrayList<>();
-        optimalItemList.add(new Item("item2",4,6));
-        optimalItemList.add(new Item("item4",8,7));
-
         SafeService safeService = new SafeService();
         Safe fillingSafe = safeService.fillSafe(safe, itemList);
 
         int actualSafePrice = fillingSafe.getItems().stream().mapToInt(Item::getPrice).sum();
-        int expectedSafePrice = optimalItemList.stream().mapToInt(Item::getPrice).sum();
+        int expectedSafePrice = 13;
 
         Assert.assertEquals(expectedSafePrice, actualSafePrice);
     }

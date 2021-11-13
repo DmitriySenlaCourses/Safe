@@ -10,51 +10,44 @@ public class SafeService {
 
     public Safe fillSafe(Safe safe, List<Item> itemList) {
         int safeCapacity = safe.getCapacity();
-        Safe[][] maxPricesEachSafeVolumeAndItemSet = new Safe[itemList.size() + 1][safeCapacity + 1];
+        Safe[] maxPricesEachSafeVolumePreviousItem = new Safe[safeCapacity + 1];
+        setEmptySafeForEmptyListItems(maxPricesEachSafeVolumePreviousItem);
 
-        setEmptySafeForEmptyListItemAndZeroCapacityStepSafe(maxPricesEachSafeVolumeAndItemSet);
-
-        for (int itemNumber = 1; itemNumber <= itemList.size(); itemNumber++) {
-            for (int safeVolumeStep = 1; safeVolumeStep <= safeCapacity; safeVolumeStep++) {
-                Item item = itemList.get(itemNumber - 1);
+        for (int itemNumber = 0; itemNumber < itemList.size(); itemNumber++) {
+            Safe[] maxPricesEachSafeVolumeCurrentItem = new Safe[safeCapacity + 1];
+            for (int safeVolumeStep = 0; safeVolumeStep < maxPricesEachSafeVolumeCurrentItem.length; safeVolumeStep++) {
+                Item item = itemList.get(itemNumber);
                 int itemVolume = item.getVolume();
                 int itemPrice = item.getPrice();
 
                 if (safeVolumeStep >= itemVolume) {
-                    if (getSafeItemPriceSum(maxPricesEachSafeVolumeAndItemSet[itemNumber - 1][safeVolumeStep]) >
-                            getSafeItemPriceSum(maxPricesEachSafeVolumeAndItemSet[itemNumber - 1][safeVolumeStep - itemVolume]) + itemPrice) {
+                    if (getSafeItemPriceSum(maxPricesEachSafeVolumePreviousItem[safeVolumeStep]) >
+                            getSafeItemPriceSum(maxPricesEachSafeVolumePreviousItem[safeVolumeStep - itemVolume]) + itemPrice) {
 
-                        maxPricesEachSafeVolumeAndItemSet[itemNumber][safeVolumeStep] =
-                                maxPricesEachSafeVolumeAndItemSet[itemNumber - 1][safeVolumeStep];
+                        maxPricesEachSafeVolumeCurrentItem[safeVolumeStep] =
+                                maxPricesEachSafeVolumePreviousItem[safeVolumeStep];
                     } else {
-                        Safe newSafe = copySafeAndAddItem(maxPricesEachSafeVolumeAndItemSet[itemNumber - 1][safeVolumeStep - itemVolume],
-                                item,
-                                safeVolumeStep);
-
-                        maxPricesEachSafeVolumeAndItemSet[itemNumber][safeVolumeStep] = newSafe;
+                        Safe newSafe = copySafeAndAddItem(maxPricesEachSafeVolumePreviousItem[safeVolumeStep - itemVolume],
+                                item, safeVolumeStep);
+                        maxPricesEachSafeVolumeCurrentItem[safeVolumeStep] = newSafe;
                     }
                 } else {
-                    maxPricesEachSafeVolumeAndItemSet[itemNumber][safeVolumeStep] =
-                            maxPricesEachSafeVolumeAndItemSet[itemNumber - 1][safeVolumeStep];
+                    maxPricesEachSafeVolumeCurrentItem[safeVolumeStep] =
+                            maxPricesEachSafeVolumePreviousItem[safeVolumeStep];
                 }
             }
+            maxPricesEachSafeVolumePreviousItem = maxPricesEachSafeVolumeCurrentItem;
         }
-        int itemNumber = maxPricesEachSafeVolumeAndItemSet.length - 1;
-        int volume = maxPricesEachSafeVolumeAndItemSet[0].length - 1;
-        return maxPricesEachSafeVolumeAndItemSet[itemNumber][volume];
+        return maxPricesEachSafeVolumePreviousItem[maxPricesEachSafeVolumePreviousItem.length - 1];
     }
 
     private int getSafeItemPriceSum(Safe safe) {
         return safe.getItems().stream().mapToInt(Item::getPrice).sum();
     }
 
-    private void setEmptySafeForEmptyListItemAndZeroCapacityStepSafe(Safe[][] maxPricesEachSafeVolumeAndItemSet) {
-        for (int itemNumber = 0; itemNumber < maxPricesEachSafeVolumeAndItemSet.length; itemNumber++) {
-            maxPricesEachSafeVolumeAndItemSet[itemNumber][0] = new Safe(0);
-        }
-
-        for (int safeVolumeStep = 0; safeVolumeStep < maxPricesEachSafeVolumeAndItemSet[0].length; safeVolumeStep++) {
-            maxPricesEachSafeVolumeAndItemSet[0][safeVolumeStep] = new Safe(safeVolumeStep);
+    private void setEmptySafeForEmptyListItems(Safe[] safe) {
+        for (int i = 0; i < safe.length; i++) {
+            safe[i] = new Safe(i);
         }
     }
 
