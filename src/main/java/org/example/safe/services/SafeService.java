@@ -15,26 +15,10 @@ public class SafeService {
 
         for (int itemNumber = 0; itemNumber < itemList.size(); itemNumber++) {
             Safe[] maxPricesEachSafeVolumeCurrentItem = new Safe[safeCapacity + 1];
-            for (int safeVolumeStep = 0; safeVolumeStep < maxPricesEachSafeVolumeCurrentItem.length; safeVolumeStep++) {
+            for (int safeVolume = 0; safeVolume < maxPricesEachSafeVolumeCurrentItem.length; safeVolume++) {
                 Item item = itemList.get(itemNumber);
-                int itemVolume = item.getVolume();
-                int itemPrice = item.getPrice();
-
-                if (safeVolumeStep >= itemVolume) {
-                    if (getSafeItemPriceSum(maxPricesEachSafeVolumePreviousItem[safeVolumeStep]) >
-                            getSafeItemPriceSum(maxPricesEachSafeVolumePreviousItem[safeVolumeStep - itemVolume]) + itemPrice) {
-
-                        maxPricesEachSafeVolumeCurrentItem[safeVolumeStep] =
-                                maxPricesEachSafeVolumePreviousItem[safeVolumeStep];
-                    } else {
-                        Safe newSafe = copySafeAndAddItem(maxPricesEachSafeVolumePreviousItem[safeVolumeStep - itemVolume],
-                                item, safeVolumeStep);
-                        maxPricesEachSafeVolumeCurrentItem[safeVolumeStep] = newSafe;
-                    }
-                } else {
-                    maxPricesEachSafeVolumeCurrentItem[safeVolumeStep] =
-                            maxPricesEachSafeVolumePreviousItem[safeVolumeStep];
-                }
+                maxPricesEachSafeVolumeCurrentItem[safeVolume] =
+                        optimalFillingForCurrentVolumeAndItem(safeVolume, item, maxPricesEachSafeVolumePreviousItem);
             }
             maxPricesEachSafeVolumePreviousItem = maxPricesEachSafeVolumeCurrentItem;
         }
@@ -51,12 +35,34 @@ public class SafeService {
         }
     }
 
-    private Safe copySafeAndAddItem(Safe safe, Item item, int newSafeCapacity) {
-        List<Item> tempItems = safe.getItems();
-        Safe newSafe = new Safe(newSafeCapacity);
+    private Safe copySafeContent(Safe from, Safe to) {
+        List<Item> tempItems = from.getItems();
         List<Item> newSafeItems = new ArrayList<>(tempItems);
-        newSafeItems.add(item);
-        newSafe.setItems(newSafeItems);
-        return newSafe;
+        to.setItems(newSafeItems);
+        return to;
+    }
+
+    private Safe addItemToSafe(Safe to, Item item) {
+        List<Item> tempItems = to.getItems();
+        tempItems.add(item);
+        return to;
+    }
+
+    private Safe optimalFillingForCurrentVolumeAndItem(int safeVolume, Item item, Safe[] maxPricesEachSafeVolumePreviousItem) {
+        int itemVolume = item.getVolume();
+        Safe safeWithoutCurrentItem = copySafeContent(maxPricesEachSafeVolumePreviousItem[safeVolume], new Safe(safeVolume));
+
+        if (safeVolume >= itemVolume) {
+            Safe tempSafe = copySafeContent(maxPricesEachSafeVolumePreviousItem[safeVolume - itemVolume], new Safe(safeVolume));
+            Safe safeWithCurrentItem = addItemToSafe(tempSafe, item);
+
+            if (getSafeItemPriceSum(safeWithCurrentItem) > getSafeItemPriceSum(safeWithoutCurrentItem)) {
+                return safeWithCurrentItem;
+            } else {
+                return safeWithoutCurrentItem;
+            }
+        } else {
+            return safeWithoutCurrentItem;
+        }
     }
 }

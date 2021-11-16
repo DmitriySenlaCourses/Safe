@@ -2,6 +2,7 @@ import org.example.safe.exceptions.EmptyFileException;
 import org.example.safe.exceptions.IncorrectDataException;
 import org.example.safe.model.Item;
 import org.example.safe.model.Safe;
+import org.example.safe.model.dto.SafeDataDto;
 import org.example.safe.services.CsvFileReader;
 import org.example.safe.services.SafePrintService;
 import org.example.safe.services.SafeService;
@@ -16,8 +17,9 @@ public class Runner {
         CsvFileReader reader = new CsvFileReader(file);
 
         try {
-            safe = new Safe(reader.getSafeCapacity());
-            List<Item> items = reader.getItemList();
+            SafeDataDto inputData = reader.getInputData();
+            safe = new Safe(inputData.getSafeCapacity());
+            List<Item> items = inputData.getItems();
 
             SafeService safeService = new SafeService();
             Safe filledSafe = safeService.fillSafe(safe, items);

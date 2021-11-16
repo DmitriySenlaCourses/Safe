@@ -3,6 +3,7 @@ package org.example.safe.services;
 import org.example.safe.exceptions.EmptyFileException;
 import org.example.safe.exceptions.IncorrectDataException;
 import org.example.safe.model.Item;
+import org.example.safe.model.dto.SafeDataDto;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,24 +21,19 @@ public class CsvFileReader {
         this.sourceFile = sourceFile;
     }
 
-    public int getSafeCapacity() throws EmptyFileException, IncorrectDataException {
-        return (int) csvReader(this::readCapacity);
-    }
-
-    public List<Item> getItemList() throws EmptyFileException, IncorrectDataException {
-        return (List<Item>) csvReader(this::readItems);
-    }
-
-    private Object csvReader(CustonFunction<BufferedReader, ?> function) throws EmptyFileException, IncorrectDataException {
+    public SafeDataDto getInputData() throws EmptyFileException, IncorrectDataException {
+        int safeCapacity = 0;
+        List<Item> inputItemsList = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
-            return function.apply(reader);
+            safeCapacity = readSafeCapacity(reader);
+            inputItemsList = readInputItemsList(reader);
         } catch (IOException e) {
             System.out.println(e);
         }
-        return null;
+        return new SafeDataDto(safeCapacity, inputItemsList);
     }
 
-    private int readCapacity(BufferedReader reader) throws EmptyFileException, IOException, IncorrectDataException {
+    private int readSafeCapacity(BufferedReader reader) throws EmptyFileException, IncorrectDataException, IOException {
         if (sourceFile.length() == 0) {
             throw new EmptyFileException(sourceFile.getAbsolutePath() + " is empty");
         }
@@ -49,19 +45,14 @@ public class CsvFileReader {
         }
     }
 
-    private List<Item> readItems(BufferedReader reader) throws IOException {
-        List<Item> items = new ArrayList<>();
+    private List<Item> readInputItemsList(BufferedReader reader) throws IOException, IncorrectDataException {
+        List<Item> inputItemsList = new ArrayList<>();
         CsvLineConverter csvLineConverter = new CsvLineConverter();
-        reader.readLine();
         while (reader.ready()) {
             String sourceString = reader.readLine();
-            try {
-                Item item = csvLineConverter.toItem(sourceString);
-                items.add(item);
-            } catch (IncorrectDataException e) {
-                System.out.println(e);
-            }
+            Item item = csvLineConverter.toItem(sourceString);
+            inputItemsList.add(item);
         }
-        return items;
+        return inputItemsList;
     }
 }

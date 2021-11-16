@@ -12,46 +12,38 @@ import java.util.List;
 
 public class CsvFileReaderTest {
 
-    @Test
-    public void getSafeCapacity() throws EmptyFileException, IncorrectDataException {
-        File file = new File("src\\test\\resources\\data.csv");
-        int expectedCapacity = 13;
-
-        CsvFileReader reader = new CsvFileReader(file);
-        int actualCapacity = reader.getSafeCapacity();
-
-        Assert.assertEquals(expectedCapacity, actualCapacity);
-
-    }
-
     @Test(expected = EmptyFileException.class)
-    public void getSafeCapacityEmptyFileException() throws EmptyFileException, IncorrectDataException {
+    public void getInputDataEmptyFileException() throws EmptyFileException, IncorrectDataException {
         File file = new File("src\\test\\resources\\data5.csv");
 
         CsvFileReader reader = new CsvFileReader(file);
-        int actualCapacity = reader.getSafeCapacity();
+        int actualCapacity = reader.getInputData().getSafeCapacity();
     }
 
     @Test(expected = IncorrectDataException.class)
-    public void getSafeCapacityIncorrectDataException() throws EmptyFileException, IncorrectDataException {
+    public void getInputDataIncorrectDataException() throws EmptyFileException, IncorrectDataException {
         File file = new File("src\\test\\resources\\data4.csv");
 
         CsvFileReader reader = new CsvFileReader(file);
-        int actualCapacity = reader.getSafeCapacity();
+        int actualCapacity = reader.getInputData().getSafeCapacity();
     }
 
     @Test
-    public void getItemList() throws EmptyFileException, IncorrectDataException {
+    public void getInputData() throws EmptyFileException, IncorrectDataException {
         File file = new File("src\\test\\resources\\data.csv");
-        List<Item> expectedItemList = new ArrayList<>();
-        expectedItemList.add(new Item("item1",3,1));
-        expectedItemList.add(new Item("item2",4,6));
-        expectedItemList.add(new Item("item3",5,4));
-        expectedItemList.add(new Item("item4",8,7));
-        expectedItemList.add(new Item("item5",9,6));
+        int expectedCapacity = 13;
+        List<Item> expectedItemsList = new ArrayList<>();
+        expectedItemsList.add(new Item("item1",3,1));
+        expectedItemsList.add(new Item("item2",4,6));
+        expectedItemsList.add(new Item("item3",5,4));
+        expectedItemsList.add(new Item("item4",8,7));
+        expectedItemsList.add(new Item("item5",9,6));
 
         CsvFileReader reader = new CsvFileReader(file);
-        List<Item> actualItemList = reader.getItemList();
-        Assert.assertEquals(expectedItemList, actualItemList);
+        int actualCapacity = reader.getInputData().getSafeCapacity();
+        List<Item> actualInputItemsList = reader.getInputData().getItems();
+
+        Assert.assertEquals(expectedCapacity, actualCapacity);
+        Assert.assertEquals(expectedItemsList, actualInputItemsList);
     }
 }
